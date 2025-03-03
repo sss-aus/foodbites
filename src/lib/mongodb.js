@@ -1,26 +1,39 @@
+// lib/mongodb.js
 import mongoose from "mongoose";
 
-let isConnected = false; // Track connection status
+const MONGODB_URI =
+  "mongodb+srv://burgerbites-hostinger:Sahajvirktencent870@nodejs.86ilhsl.mongodb.net/burgerbites?retryWrites=true&w=majority&appName=nodejs";
 
-export async function connectToDB() {
-  if (isConnected) {
-    console.log("Using existing database connection");
-    return;
-  }
-
-  try {
-    const db = await mongoose.connect(
-      "mongodb+srv://burgerbites-hostinger:Sahajvirktencent870@nodejs.86ilhsl.mongodb.net/burgerbites?retryWrites=true&w=majority&appName=nodejs",
-      {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      }
-    );
-
-    isConnected = db.connections[0].readyState;
-    console.log("Connected to MongoDB");
-  } catch (error) {
-    console.error("MongoDB connection error:", error);
-    process.exit(1);
-  }
+if (!MONGODB_URI) {
+  throw new Error("Please define the MONGODB_URI environment variable");
 }
+
+/**
+ * Global is used here to maintain a cached connection across hot reloads in development.
+ * In production, you can safely remove this caching.
+ */
+let cached = global.mongoose;
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+async function connectToDB() {
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    const opts = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    };
+
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      return mongoose;
+    });
+  }
+  cached.conn = await cached.promise;
+  return cached.conn;
+}
+
+export { connectToDB };
