@@ -20,7 +20,7 @@ export default function Hero() {
         {/* Main Content */}
         <div className="relative z-10 max-w-3xl p-1">
           <h1 className="text-6xl font-extrabold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent drop-shadow-lg p-2">
-            Burger Singh
+            Burger Bites
           </h1>
           <p className="text-xl mt-4 font-medium drop-shadow-md">
             Indulge in the ultimate burger experience – fresh, juicy, and
