@@ -5,8 +5,14 @@ import { useRouter } from "next/navigation";
 // Update Type Definitions
 type OrderStatus = "pending" | "preparing" | "confirmed" | "completed";
 
+interface MenuItemDetails {
+  _id: string;
+  name: string;
+  price: number;
+}
+
 interface OrderItem {
-  menuItemId: string; // e.g., { name: string, price: number }
+  menuItemId: MenuItemDetails;
   quantity: number;
   _id: string;
 }
@@ -16,9 +22,9 @@ interface Order {
   tableNumber: string;
   userName: string;
   numberOfGuests: number;
-  items: string; // Items is a JSON string, so you'll parse it
+  items: string; // JSON string to be parsed into OrderItem[]
   status: OrderStatus;
-  createdAt: string; // Ensure your API returns this timestamp (ISO string)
+  createdAt: string; // ISO string
 }
 
 export default function AdminDashboard() {
@@ -68,20 +74,15 @@ export default function AdminDashboard() {
     (order) => order.status === "completed"
   );
 
-  // Analytics calculations:
-  // Total orders in the last 24 hours
-  // Analytics calculations:
-  // Total orders in the last 24 hours (all orders, regardless of status)
+  // Analytics calculations
   const totalOrders = recentOrders.length;
-
-  // Total sales: sum only completed orders' totals
   const totalSales = recentOrders.reduce((acc, order) => {
     if (order.status !== "completed") return acc; // Only count completed orders
     let orderTotal = 0;
     let parsedItems: OrderItem[] = [];
     if (typeof order.items === "string") {
       try {
-        parsedItems = JSON.parse(order.items);
+        parsedItems = JSON.parse(order.items) as OrderItem[];
       } catch (error) {
         console.error("Error parsing order items:", error);
       }
@@ -89,13 +90,10 @@ export default function AdminDashboard() {
       parsedItems = order.items;
     }
     parsedItems.forEach((item) => {
-      // Assumes each menuItemId has a price property
       orderTotal += item.quantity * (item.menuItemId.price || 0);
     });
     return acc + orderTotal;
   }, 0);
-
-  // Order rate: orders per hour for the last 24 hours
   const orderRate = totalOrders / 24;
 
   // Handle status selection from dropdown
@@ -139,7 +137,7 @@ export default function AdminDashboard() {
     let parsedItems: OrderItem[] = [];
     if (typeof order.items === "string") {
       try {
-        parsedItems = JSON.parse(order.items);
+        parsedItems = JSON.parse(order.items) as OrderItem[];
       } catch (error) {
         console.error("Error parsing order items:", error);
       }
@@ -232,7 +230,7 @@ export default function AdminDashboard() {
           <h3 className="text-xl text-green-400 mb-2">Pending Orders</h3>
           {pendingOrders.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pendingOrders.map((order) => renderOrderCard(order))}
+              {pendingOrders.map(renderOrderCard)}
             </div>
           ) : (
             <p className="text-gray-400">No pending orders.</p>
@@ -244,7 +242,7 @@ export default function AdminDashboard() {
           <h3 className="text-xl text-green-400 mb-2">Preparing Orders</h3>
           {preparingOrders.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {preparingOrders.map((order) => renderOrderCard(order))}
+              {preparingOrders.map(renderOrderCard)}
             </div>
           ) : (
             <p className="text-gray-400">No preparing orders.</p>
@@ -256,7 +254,7 @@ export default function AdminDashboard() {
           <h3 className="text-xl text-green-400 mb-2">Confirmed Orders</h3>
           {confirmedOrders.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {confirmedOrders.map((order) => renderOrderCard(order))}
+              {confirmedOrders.map(renderOrderCard)}
             </div>
           ) : (
             <p className="text-gray-400">No confirmed orders.</p>
@@ -268,7 +266,7 @@ export default function AdminDashboard() {
           <h3 className="text-xl text-green-400 mb-2">Completed Orders</h3>
           {completedOrders.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {completedOrders.map((order) => renderOrderCard(order))}
+              {completedOrders.map(renderOrderCard)}
             </div>
           ) : (
             <p className="text-gray-400">No completed orders.</p>

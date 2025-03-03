@@ -4,17 +4,28 @@ import { useEffect, useState } from "react";
 
 // Define TypeScript Types for MongoDB
 interface Category {
-  _id: string; // Use MongoDB `_id`
+  _id: string; // MongoDB uses _id instead of id
   name: string;
 }
 
 interface MenuItem {
-  _id: string; // Use MongoDB `_id`
+  _id: string; // MongoDB uses _id instead of id
   name: string;
   description: string;
   price: number;
   imageUrl: string;
-  categoryId: string; // Ensure consistency with MongoDB
+  categoryId: string; // Ensure this matches MongoDB schema
+}
+
+// This type represents the raw data received from the API.
+// The categoryId may either be a string or an object with an _id property.
+interface RawMenuItem {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+  categoryId: string | { _id: string; [key: string]: unknown };
 }
 
 export default function ClientMenu() {
@@ -39,14 +50,15 @@ export default function ClientMenu() {
     try {
       const res = await fetch("/api/menu");
       if (!res.ok) throw new Error("Failed to fetch menu items");
-      const data = await res.json(); // Define `data` here
-      const formattedData: MenuItem[] = data.map((item: any) => ({
+      // Cast the received data to RawMenuItem[]
+      const data: RawMenuItem[] = await res.json();
+      const formattedData: MenuItem[] = data.map((item) => ({
         _id: item._id,
         name: item.name,
         description: item.description,
         price: item.price,
         imageUrl: item.imageUrl,
-        // Extract categoryId properly: if it's an object with an _id, extract that; otherwise convert directly.
+        // If categoryId is an object with _id, extract that; otherwise, convert directly.
         categoryId:
           typeof item.categoryId === "object" && item.categoryId._id
             ? String(item.categoryId._id)
@@ -122,7 +134,7 @@ export default function ClientMenu() {
           price: selectedItem.price,
           quantity,
           extras,
-          categoryId: String(selectedItem.categoryId),
+          categoryId: selectedItem.categoryId,
         },
       ],
       status: "pending",
