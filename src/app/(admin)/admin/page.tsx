@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 type OrderStatus = "pending" | "preparing" | "confirmed" | "completed";
 
 interface OrderItem {
-  menuItemId: any; // e.g., { name: string, price: number }
+  menuItemId: string; // e.g., { name: string, price: number }
   quantity: number;
   _id: string;
 }
